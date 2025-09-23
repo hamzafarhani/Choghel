@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'available_workspaces_screen.dart';
 import '../widgets/categories_bottom_sheet.dart';
+import 'categories.dart';
 import 'signup_screen.dart';
 import 'note.dart';
 import 'plus.dart';
@@ -690,9 +691,7 @@ class _WeworkHomePageState extends State<WeworkHomePage> with SingleTickerProvid
   }
 
   Widget _buildCategoriesPage() {
-    return Center(
-      child: Text('Categories Page'),
-    );
+    return const CategoriesPage();
   }
 
   Widget _buildPlusPage() {

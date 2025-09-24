@@ -105,26 +105,17 @@ class _CategoriesPageState extends State<CategoriesPage> with TickerProviderStat
             children: [
               Padding(
                 padding: const EdgeInsets.fromLTRB(20, 10, 20, 8),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Catégories',
-                          style: TextStyle(color: Colors.white, fontSize: 26, fontWeight: FontWeight.bold),
-                        ),
-                        Text(
-                          'Choisissez un type pour explorer',
-                          style: TextStyle(color: Colors.white.withOpacity(0.85)),
-                        ),
-                      ],
+                    const Text(
+                      'Catégories',
+                      style: TextStyle(color: Colors.white, fontSize: 26, fontWeight: FontWeight.bold),
                     ),
-                    IconButton(
-                      onPressed: () => Navigator.pop(context),
-                      icon: const Icon(Icons.close, color: Colors.white),
-                    )
+                    Text(
+                      'Choisissez un type pour explorer',
+                      style: TextStyle(color: Colors.white.withOpacity(0.85)),
+                    ),
                   ],
                 ),
               ),

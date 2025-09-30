@@ -69,250 +69,336 @@ class _WorkspaceBookingScreenState extends State<WorkspaceBookingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final selectedSeatCodes = _selectedSeatCodes();
+    final durationHours = _calculateDurationHours();
+
     return Scaffold(
       appBar: AppBar(
         title: Text('Réserver ${widget.workspace['name']}'),
         backgroundColor: Colors.blueAccent,
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Map Section
-            SizedBox(
-              height: 200,
-              child: FlutterMap(
-                options: MapOptions(
-                  initialCenter: _tunis,
-                  initialZoom: 15,
-                ),
-                children: [
-                  TileLayer(
-                    urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                    userAgentPackageName: 'com.example.choghel',
-                  ),
-                  MarkerLayer(
-                    markers: [
-                      Marker(
-                        point: _tunis,
-                        width: 80,
-                        height: 80,
-                        child: Column(
-                          children: [
-                            Icon(Icons.location_on, color: Colors.red, size: 40),
-                            Container(
-                              padding: EdgeInsets.all(4),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(4),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black26,
-                                    blurRadius: 4,
-                                  ),
-                                ],
-                              ),
-                              child: Text(
-                                widget.workspace['name'],
-                                style: TextStyle(fontSize: 12),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10, offset: Offset(0, -2))],
+        ),
+        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: SafeArea(
+          top: false,
+          child: SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () {
+                final error = _validate();
+                if (error != null) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(error), backgroundColor: Colors.red),
+                  );
+                  return;
+                }
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Réservation confirmée!'), backgroundColor: Colors.green),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blueAccent,
+                padding: EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
+              child: Text('Confirmer'),
             ),
-
-            // Booking Details
-            Padding(
-              padding: EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Détails de la réservation',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
+          ),
+        ),
+      ),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Map Card
+              Padding(
+                padding: EdgeInsets.all(16),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 12, offset: Offset(0, 6))],
                   ),
-                  SizedBox(height: 16),
-
-                  // Date Selection
-                  Card(
-                    elevation: 2,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: ListTile(
-                      leading: Icon(Icons.calendar_today, color: Colors.blueAccent),
-                      title: Text('Date'),
-                      subtitle: Text(selectedDate != null
-                          ? '${selectedDate!.day}/${selectedDate!.month}/${selectedDate!.year}'
-                          : 'Sélectionner une date'),
-                      onTap: () => _selectDate(context),
-                    ),
-                  ),
-                  SizedBox(height: 8),
-
-                  // Time Selection
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Card(
-                          elevation: 2,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: SizedBox(
+                      height: 220,
+                      child: FlutterMap(
+                        options: MapOptions(initialCenter: _tunis, initialZoom: 15),
+                        children: [
+                          TileLayer(
+                            urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                            userAgentPackageName: 'com.example.choghel',
                           ),
-                          child: ListTile(
-                            leading: Icon(Icons.access_time, color: Colors.blueAccent),
-                            title: Text('Début'),
-                            subtitle: Text(startTime != null
-                                ? startTime!.format(context)
-                                : 'Sélectionner'),
-                            onTap: () => _selectTime(context, true),
-                          ),
-                        ),
-                      ),
-                      SizedBox(width: 8),
-                      Expanded(
-                        child: Card(
-                          elevation: 2,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: ListTile(
-                            leading: Icon(Icons.access_time, color: Colors.blueAccent),
-                            title: Text('Fin'),
-                            subtitle: Text(endTime != null
-                                ? endTime!.format(context)
-                                : 'Sélectionner'),
-                            onTap: () => _selectTime(context, false),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 24),
-
-                  // Seat Selection
-                  Text(
-                    'Sélection des places',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  SizedBox(height: 8),
-                  Text(
-                    'Les places en vert sont disponibles, en rouge sont réservées',
-                    style: TextStyle(color: Colors.grey),
-                  ),
-                  SizedBox(height: 16),
-
-                  // Seat Grid
-                  Container(
-                    padding: EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey.shade300),
-                      borderRadius: BorderRadius.circular(12),
-                      color: Colors.grey.shade50,
-                    ),
-                    child: Column(
-                      children: seats.asMap().entries.map((row) {
-                        return Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: row.value.asMap().entries.map((seat) {
-                            return GestureDetector(
-                              onTap: () {
-                                if (seat.value) {
-                                  setState(() {
-                                    seats[row.key][seat.key] = !seats[row.key][seat.key];
-                                  });
-                                }
-                              },
-                              child: Container(
-                                margin: EdgeInsets.all(4),
-                                width: 40,
-                                height: 40,
-                                decoration: BoxDecoration(
-                                  color: !seat.value ? Colors.red.withOpacity(0.7) : Colors.green,
-                                  borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(
-                                    color: Colors.black12,
-                                    width: 1,
-                                  ),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withOpacity(0.1),
-                                      blurRadius: 4,
-                                      offset: Offset(0, 2),
+                          MarkerLayer(
+                            markers: [
+                              Marker(
+                                point: _tunis,
+                                width: 80,
+                                height: 80,
+                                child: Column(
+                                  children: [
+                                    Icon(Icons.location_on, color: Colors.red, size: 40),
+                                    Container(
+                                      padding: EdgeInsets.all(4),
+                                      decoration: BoxDecoration(
+                                        color: Colors.white,
+                                        borderRadius: BorderRadius.circular(4),
+                                        boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 4)],
+                                      ),
+                                      child: Text(widget.workspace['name'], style: TextStyle(fontSize: 12)),
                                     ),
                                   ],
                                 ),
-                                child: Center(
-                                  child: Text(
-                                    '${row.key + 1}${String.fromCharCode(65 + seat.key)}',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+
+              // Step 1: Date & Time
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16),
+                child: _buildStepCard(
+                  title: '1. Date et horaires',
+                  child: Column(
+                    children: [
+                      ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        leading: Icon(Icons.calendar_today, color: Colors.blueAccent),
+                        title: Text('Date'),
+                        subtitle: Text(selectedDate != null
+                            ? '${selectedDate!.day}/${selectedDate!.month}/${selectedDate!.year}'
+                            : 'Sélectionner une date'),
+                        onTap: () => _selectDate(context),
+                      ),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _timeCard(
+                              label: 'Début',
+                              value: startTime?.format(context) ?? 'Sélectionner',
+                              onTap: () => _selectTime(context, true),
+                            ),
+                          ),
+                          SizedBox(width: 12),
+                          Expanded(
+                            child: _timeCard(
+                              label: 'Fin',
+                              value: endTime?.format(context) ?? 'Sélectionner',
+                              onTap: () => _selectTime(context, false),
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 8),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          durationHours > 0 ? 'Durée ~ ${durationHours.toStringAsFixed(1)} h' : 'Durée inconnue',
+                          style: TextStyle(color: Colors.grey[700]),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              SizedBox(height: 12),
+
+              // Step 2: Seats
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16),
+                child: _buildStepCard(
+                  title: '2. Sélection des places',
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          _legendDot(color: Colors.green),
+                          SizedBox(width: 6),
+                          Text('Disponible'),
+                          SizedBox(width: 16),
+                          _legendDot(color: Colors.red.withOpacity(0.7)),
+                          SizedBox(width: 6),
+                          Text('Réservée'),
+                        ],
+                      ),
+                      SizedBox(height: 12),
+                      Container(
+                        padding: EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade50,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.grey.shade300),
+                        ),
+                        child: Column(
+                          children: seats.asMap().entries.map((row) {
+                            return Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: row.value.asMap().entries.map((seat) {
+                                final isAvailable = seat.value;
+                                final isSelected = isAvailable && seats[row.key][seat.key] == false ? false : isAvailable && !seats[row.key][seat.key] ? false : isAvailable && seats[row.key][seat.key];
+                                // We treat seats[][] as toggled selection only if available
+                                final currentlySelected = isAvailable && seats[row.key][seat.key];
+                                return GestureDetector(
+                                  onTap: () {
+                                    if (isAvailable) {
+                                      setState(() {
+                                        seats[row.key][seat.key] = !seats[row.key][seat.key];
+                                      });
+                                    }
+                                  },
+                                  child: AnimatedContainer(
+                                    duration: Duration(milliseconds: 150),
+                                    margin: EdgeInsets.all(4),
+                                    width: 40,
+                                    height: 40,
+                                    decoration: BoxDecoration(
+                                      color: !isAvailable
+                                          ? Colors.red.withOpacity(0.7)
+                                          : (currentlySelected ? Colors.blueAccent : Colors.green),
+                                      borderRadius: BorderRadius.circular(8),
+                                      boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, 2))],
+                                    ),
+                                    child: Center(
+                                      child: Text(
+                                        '${row.key + 1}${String.fromCharCode(65 + seat.key)}',
+                                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
+                                      ),
                                     ),
                                   ),
-                                ),
-                              ),
+                                );
+                              }).toList(),
                             );
                           }).toList(),
-                        );
-                      }).toList(),
-                    ),
-                  ),
-                  SizedBox(height: 24),
-
-                  // Confirm Button
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        if (selectedDate == null || startTime == null || endTime == null) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('Veuillez remplir tous les champs'),
-                              backgroundColor: Colors.red,
-                            ),
-                          );
-                          return;
-                        }
-                        // TODO: Implement booking confirmation
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('Réservation confirmée!'),
-                            backgroundColor: Colors.green,
-                          ),
-                        );
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blueAccent,
-                        padding: EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
                         ),
-                        elevation: 3,
                       ),
-                      child: Text(
-                        'Confirmer la réservation',
-                        style: TextStyle(fontSize: 16),
-                      ),
-                    ),
+                      SizedBox(height: 12),
+                      if (selectedSeatCodes.isNotEmpty)
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: selectedSeatCodes
+                              .map((code) => Chip(
+                                    label: Text(code),
+                                    backgroundColor: Colors.blueAccent.withOpacity(0.1),
+                                    labelStyle: TextStyle(color: Colors.blueAccent, fontWeight: FontWeight.w600),
+                                  ))
+                              .toList(),
+                        ),
+                    ],
                   ),
-                ],
+                ),
               ),
-            ),
+
+              SizedBox(height: 100),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Helpers UI
+  Widget _buildStepCard({required String title, required Widget child}) {
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 12, offset: Offset(0, 6))],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 6,
+                height: 20,
+                decoration: BoxDecoration(color: Colors.blueAccent, borderRadius: BorderRadius.circular(3)),
+              ),
+              SizedBox(width: 8),
+              Text(title, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            ],
+          ),
+          SizedBox(height: 12),
+          child,
+        ],
+      ),
+    );
+  }
+
+  Widget _timeCard({required String label, required String value, required VoidCallback onTap}) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Ink(
+        padding: EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.grey.shade50,
+          border: Border.all(color: Colors.grey.shade300),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.access_time, color: Colors.blueAccent),
+            SizedBox(width: 8),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(label, style: TextStyle(color: Colors.grey[700])),
+                Text(value, style: TextStyle(fontWeight: FontWeight.w600)),
+              ],
+            )
           ],
         ),
       ),
     );
+  }
+
+  Widget _legendDot({required Color color}) {
+    return Container(width: 12, height: 12, decoration: BoxDecoration(color: color, shape: BoxShape.circle));
+  }
+
+  List<String> _selectedSeatCodes() {
+    final List<String> codes = [];
+    for (int r = 0; r < seats.length; r++) {
+      for (int c = 0; c < seats[r].length; c++) {
+        if (availableSeats[r][c] && seats[r][c]) {
+          codes.add('${r + 1}${String.fromCharCode(65 + c)}');
+        }
+      }
+    }
+    return codes;
+  }
+
+  double _calculateDurationHours() {
+    if (selectedDate == null || startTime == null || endTime == null) return 0;
+    final start = DateTime(selectedDate!.year, selectedDate!.month, selectedDate!.day, startTime!.hour, startTime!.minute);
+    final end = DateTime(selectedDate!.year, selectedDate!.month, selectedDate!.day, endTime!.hour, endTime!.minute);
+    final diff = end.difference(start).inMinutes / 60.0;
+    return diff > 0 ? diff : 0;
+  }
+
+  String? _validate() {
+    if (selectedDate == null) return 'Veuillez sélectionner une date';
+    if (startTime == null) return 'Veuillez sélectionner l\'heure de début';
+    if (endTime == null) return 'Veuillez sélectionner l\'heure de fin';
+    if (_calculateDurationHours() <= 0) return 'L\'heure de fin doit être après l\'heure de début';
+    if (_selectedSeatCodes().isEmpty) return 'Veuillez sélectionner au moins une place';
+    return null;
   }
 } 

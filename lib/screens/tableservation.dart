@@ -35,64 +35,117 @@ class _TableReservationScreenState extends State<TableReservationScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final selectedCount = tableStatus.where((s) => s == 2).length;
+
     return Scaffold(
       appBar: AppBar(
-        title: Text('Restaurant Reservation'),
-        backgroundColor: Colors.blue[100],
+        title: Text('Réservation de tables'),
+        backgroundColor: Colors.blueAccent,
+      ),
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10, offset: Offset(0, -2))],
+        ),
+        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: SafeArea(
+          top: false,
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text('Tables sélectionnées', style: TextStyle(fontWeight: FontWeight.w600)),
+                    SizedBox(height: 2),
+                    Text('$selectedCount', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.blueAccent)),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: selectedCount == 0
+                      ? null
+                      : () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Tables confirmées: $selectedCount'), backgroundColor: Colors.green),
+                          );
+                        },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blueAccent,
+                    padding: EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: Text('Confirmer'),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
       body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Text(
-              'Select Your Table',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Sélectionnez votre table', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                SizedBox(height: 8),
+                Row(
+                  children: const [
+                    _LegendDot(color: Colors.green),
+                    SizedBox(width: 6),
+                    Text('Libre'),
+                    SizedBox(width: 16),
+                    _LegendDot(color: Colors.red),
+                    SizedBox(width: 6),
+                    Text('Réservée'),
+                    SizedBox(width: 16),
+                    _LegendDot(color: Colors.blue),
+                    SizedBox(width: 6),
+                    Text('Votre table'),
+                  ],
+                ),
+              ],
             ),
           ),
           Expanded(
             child: GridView.builder(
               padding: EdgeInsets.all(16.0),
               gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 5, // Number of tables per row
-                crossAxisSpacing: 10,
-                mainAxisSpacing: 10,
+                crossAxisCount: 5,
+                crossAxisSpacing: 12,
+                mainAxisSpacing: 12,
               ),
               itemCount: tableStatus.length,
               itemBuilder: (context, index) {
+                final status = tableStatus[index];
+                final color = status == 0
+                    ? Colors.green
+                    : status == 1
+                        ? Colors.red
+                        : Colors.blueAccent;
                 return GestureDetector(
                   onTap: () => selectTable(index),
-                  child: Container(
+                  child: AnimatedContainer(
+                    duration: Duration(milliseconds: 150),
                     decoration: BoxDecoration(
-                      color: tableStatus[index] == 0
-                          ? Colors.green
-                          : tableStatus[index] == 1
-                              ? Colors.red
-                              : Colors.blue,
-                      borderRadius: BorderRadius.circular(8),
+                      color: color,
+                      borderRadius: BorderRadius.circular(10),
+                      boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 6, offset: Offset(0, 3))],
                     ),
                     child: Center(
                       child: Text(
                         'T${index + 1}',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                       ),
                     ),
                   ),
                 );
               },
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                LegendItem(color: Colors.green, label: 'Free Table'),
-                LegendItem(color: Colors.red, label: 'Reserved Table'),
-                LegendItem(color: Colors.blue, label: 'Your Table'),
-              ],
             ),
           ),
         ],
@@ -119,6 +172,20 @@ class LegendItem extends StatelessWidget {
         SizedBox(width: 8),
         Text(label),
       ],
+    );
+  }
+}
+
+class _LegendDot extends StatelessWidget {
+  final Color color;
+  const _LegendDot({required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 12,
+      height: 12,
+      decoration: BoxDecoration(color: color, shape: BoxShape.circle),
     );
   }
 }
